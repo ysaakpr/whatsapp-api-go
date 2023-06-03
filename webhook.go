@@ -712,8 +712,9 @@ func (api *API) WebhookVerificationHandler(w http.ResponseWriter, r *http.Reques
 	if len(mode) > 0 && len(token) > 0 {
 		if mode == "subscribe" && token == api.WebHookVerification {
 			w.WriteHeader(http.StatusOK)
-			jData, _ := json.Marshal(challenge)
-			w.Write(jData)
+			// jData, _ := json.Marshal(challenge)
+			// w.Write(jData)
+			w.Write([]byte(challenge))
 		} else {
 			w.WriteHeader(http.StatusForbidden)
 		}

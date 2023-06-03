@@ -58,15 +58,12 @@ func (api *API) send(phoneId, to, _type string, obj interface{}) (*MessageRespon
 	if status >= 400 {
 		e := ErrorResponse{}
 		json.Unmarshal(res, &e)
-		fmt.Printf("things err are: %v\n\n", e)
 		return nil, &e
 	}
 
 	r := MessageResponse{}
 	json.Unmarshal(res, &r)
-
-	fmt.Printf("things are: %v\n\n", r)
-
+	
 	return &r, nil
 }
 
