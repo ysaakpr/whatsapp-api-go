@@ -714,16 +714,12 @@ func (api *API) WebhookVerificationHandler(w http.ResponseWriter, r *http.Reques
 			w.WriteHeader(http.StatusOK)
 			jData, _ := json.Marshal(challenge)
 			w.Write(jData)
-
 		} else {
 			w.WriteHeader(http.StatusForbidden)
-			return
 		}
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
 	}
-
-	w.WriteHeader(http.StatusBadRequest)
-	return
-
 }
 
 func (api *API) WebhookEventHandler(w http.ResponseWriter, r *http.Request, cq chan<- WebhookMessage) {
@@ -738,6 +734,4 @@ func (api *API) WebhookEventHandler(w http.ResponseWriter, r *http.Request, cq c
 	}
 	cq <- hookData
 	w.WriteHeader(http.StatusAccepted)
-	return
-
 }
