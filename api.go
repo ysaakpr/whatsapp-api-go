@@ -20,6 +20,8 @@ type API struct {
 	URI                 string `default:"https://graph.facebook.com"`
 	Version             string `default:"v13.0"`
 	client              *http.Client
+	VerifyHMAC          bool
+	AppSecret           string
 }
 
 type ErrorResponse struct {

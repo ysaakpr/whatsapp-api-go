@@ -712,8 +712,10 @@ func (api *API) WebhookVerificationHandler(w http.ResponseWriter, r *http.Reques
 	if len(mode) > 0 && len(token) > 0 {
 		if mode == "subscribe" && token == api.WebHookVerification {
 			w.WriteHeader(http.StatusOK)
-			jData, _ := json.Marshal(challenge)
-			w.Write(jData)
+			//json marshall not working as expected -> challenge vs "challenge"
+			// jData, _ := json.Marshal(challenge)
+			// w.Write(jData)
+			w.Write([]byte(challenge))
 		} else {
 			w.WriteHeader(http.StatusForbidden)
 		}
@@ -722,12 +724,50 @@ func (api *API) WebhookVerificationHandler(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+
+func (api *API) isValidSignature(signature string, body []byte) (bool, error) {
+	actualSign, err := hex.DecodeString(signature[len("sha256="):])
+	if err != nil {
+		return false, fmt.Errorf("decode string: %w", err)
+	}
+
+	return hmac.Equal(api.signBody(body), actualSign), nil
+}
+
+func (api *API) signBody(body []byte) []byte {
+	h := hmac.New(sha256.New, []byte(api.AppSecret))
+	h.Reset()
+	h.Write(body)
+
+	return h.Sum(nil)
+}
+
 func (api *API) WebhookEventHandler(w http.ResponseWriter, r *http.Request, cq chan<- WebhookMessage) {
 	var hookData WebhookMessage
 	defer r.Body.Close()
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&hookData)
 
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if api.VerifyHMAC {
+		signature := r.Header.Get("X-Hub-Signature-256")
+		validSignature, err := api.isValidSignature(signature, body)
+		if err != nil {
+			w.WriteHeader(http.StatusForbidden)
+			w.Write([]byte("unable to verify signature " + err.Error()))
+			return
+		}
+		if !validSignature {
+			w.WriteHeader(http.StatusForbidden)
+			w.Write([]byte("signature mismatch"))
+			return
+		}
+	}
+
+	err = json.Unmarshal(body, &hookData)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -735,3 +775,4 @@ func (api *API) WebhookEventHandler(w http.ResponseWriter, r *http.Request, cq c
 	cq <- hookData
 	w.WriteHeader(http.StatusAccepted)
 }
+
