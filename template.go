@@ -4,16 +4,18 @@ type TextBasedTemplate struct {
 	Name       string          `json:"name"`
 	Language   Language        `json:"language"`
 	Components []ComponentText `json:"components"`
-	Type       string          `json:"type"`
+	Type       string          `json:"-"`
 	api        *API
 }
+
 type MultiBasedTemplate struct {
 	Name       string           `json:"name"`
 	Language   Language         `json:"language"`
 	Components []ComponentMedia `json:"components"`
-	Type       string           `json:"type"`
+	Type       string           `json:"-"`
 	api        *API
 }
+
 type Language struct {
 	Code string `json:"code"`
 }
@@ -29,17 +31,19 @@ type ComponentMedia struct {
 }
 
 type ParameterMedia struct {
-	Type  string `json:"type"`
-	Image struct {
-		Link string `json:"link"`
-	} `json:"image,omitempty"`
+	Type  string              `json:"type"`
+	Image *ParameterMediaLink `json:"image,omitempty"`
+}
+
+type ParameterMediaLink struct {
+	Link string `json:"link"`
 }
 
 type ParameterText struct {
-	Type     string   `json:"type"`
-	Text     string   `json:"text,omitempty"`
-	Currency Currency `json:"currency,omitempty"`
-	DateTime DateTime `json:"date_time,omitempty"`
+	Type     string    `json:"type"`
+	Text     *string   `json:"text,omitempty"`
+	Currency *Currency `json:"currency,omitempty"`
+	DateTime *DateTime `json:"date_time,omitempty"`
 }
 
 type Currency struct {
