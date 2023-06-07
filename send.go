@@ -67,6 +67,26 @@ func (api *API) send(phoneId, to, _type string, obj interface{}) (*MessageRespon
 	return &r, nil
 }
 
+func (api *API) SendMessage(phoneId string, jsonRaw json.RawMessage) (*MessageResponse, error) {
+	endpoint := fmt.Sprintf("/%s/messages", phoneId)
+
+	res, status, err := api.requestRaw(endpoint, "POST", nil, jsonRaw)
+	if err != nil {
+		return nil, err
+	}
+
+	if status >= 400 {
+		e := ErrorResponse{}
+		json.Unmarshal(res, &e)
+		return nil, &e
+	}
+
+	r := MessageResponse{}
+	json.Unmarshal(res, &r)
+
+	return &r, nil
+}
+
 func (obj *Media) Send(phoneId, to string) (*MessageResponse, error) {
 
 	var rObj interface{}

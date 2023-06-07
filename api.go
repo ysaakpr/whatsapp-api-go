@@ -84,3 +84,43 @@ func (api *API) request(endpoint string, method string, params map[string]interf
 	status = resp.StatusCode
 	return
 }
+
+func (api *API) requestRaw(endpoint string, method string, params map[string]interface{}, reqBody json.RawMessage) (result []byte, status int, err error) {
+	if api.client == nil {
+		api.client = &http.Client{}
+	}
+
+	uri := fmt.Sprintf("%s/%s%s", api.URI, api.Version, endpoint)
+
+	if params != nil {
+		uri = fmt.Sprintf("%s?", uri)
+		query := url.Values{}
+
+		for k, v := range params {
+			query.Add(k, v.(string))
+		}
+		uri = uri + query.Encode()
+	}
+
+	req, err := http.NewRequest(method, uri, bytes.NewBuffer(reqBody))
+	if err != nil {
+		return
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", api.Token))
+
+	resp, err := api.client.Do(req)
+	if resp.Body != nil {
+		defer resp.Body.Close()
+	}
+	if err != nil {
+		return
+	}
+	result, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+	status = resp.StatusCode
+	return
+}
